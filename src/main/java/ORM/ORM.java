@@ -1,18 +1,16 @@
 package ORM;
 
-import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.query.Query;
-import org.hibernate.service.ServiceRegistry;
 import tables.JobEntity;
 import tables.RetireeEntity;
 
 
-import java.math.BigDecimal;
+
 import java.util.List;
 
 public class ORM {
