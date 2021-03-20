@@ -1,121 +1,153 @@
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.flywaydb.core.Flyway;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.lang.management.BufferPoolMXBean;
+import queryManagers.SimpleQueries;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
-class SimpleQueriesTest {
-    static ArrayList<String> queries;
 
-    static {
-        try {
-            queries = getQueries();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+public class SimpleQueriesTest {
 
     @BeforeAll
     public static void migrate() {
         Flyway flyway = Flyway.configure().dataSource("jdbc:postgresql://localhost:5432/postgres",
-                "postgres", "giro1300708").load();
+                "postgres", "password").load();
 
         flyway.migrate();
     }
 
     @Test
-    public void tryToConnect() throws SQLException {
-        assertTrue(SimpleQueries.connection());
-    }
+    public void queryExperiencedRetirees() throws SQLException {
+        String sql = """
+                select *
+                from retiree
+                where retirement_experience > 5;
+                """;
 
-    public static ArrayList<String> getQueries() throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(
-                "src/main/resources/db/migration/V1_1_0__queries.sql"));
-        ArrayList<String> list = new ArrayList<>();
-        String str;
-        String request = "";
-        while ((str = reader.readLine()) != null){
-            if (str.contains("select") && request != ""){
-                list.add(request);
-                request = str + "\n";
+        List<Object[]> rows = SimpleQueries.executeQuery(sql);
+        List<String> ans = new LinkedList<>();
+
+        for (Object[] row : rows) {
+            String rowStr = "";
+            for (int i = 0; i < row.length; i++) {
+                rowStr += row[i];
+                if (i != row.length - 1)
+                    rowStr += "\t";
             }
-            else
-                request += str + "\n";
+            ans.add(rowStr);
         }
-        list.add(request);
-        return list;
+
+        List<String> correctAns = new LinkedList<>();
+        correctAns.add("1\tSuchareva\tNatalia\tVictorovna\tF\tBelarus\t1975\t" +
+                "294567890\t222160, Zhodino, 8 marta, 16" +
+                "\t7\t1000.0\t1");
+        correctAns.add("2\tBuyvidovich\tVasiliy\tMichaylovich\tM\tBelarus\t" +
+                "1963\t292849045\t" +
+                "222162, Zhodino, Gagarina 4, 45\t16\t1500.0\t3");
+        correctAns.add("4\tPetrov\tIvan\tAlexeevish\tM\tUkraine\t1978\t445699857\t" +
+                "222161, Zhodino, pr Pushkina 17, 76" +
+                "\t35\t2000.0\t2");
+        assertEquals(correctAns, ans);
+    }
+
+
+    @Test
+    public void queryJobPositions() throws SQLException {
+        String sql = """
+                select retiree.id, surname, name, retirement_experience, job.job_position
+                from retiree
+                         left join job
+                                   on retiree.job_id = job.id;
+                """;
+
+        List<String> correctAns = new LinkedList<>();
+        correctAns.add("1\tSuchareva\tNatalia\t7\tteachers higher category");
+        correctAns.add("2\tBuyvidovich\tVasiliy\t16\tdoctor");
+        correctAns.add("3\tBruzhas\tIrina\t2\tnurse");
+        correctAns.add("4\tPetrov\tIvan\t35\tnurse");
+        correctAns.add("5\tOreshko\tIhar\t2\tteachers higher category");
+        assertEquals(correctAns, getAnswer(sql));
     }
 
     @Test
-    public void experience5Query() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("1\tSuchareva\tNatalia\tVictorovna\tF\tBelarus\t1975\t294567890\t222160, Zhodino, 8 marta, 16\t7\t1000\t1\t");
-        answer.add("2\tBuyvidovich\tVasiliy\tMichaylovich\tM\tBelarus\t1963\t292849045\t222162, Zhodino, Gagarina 4, 45\t16\t1500\t3\t");
-        answer.add("4\tPetrov\tIvan\tAlexeevish\tM\tUkraine\t1978\t445699857\t222161, Zhodino, pr Pushkina 17, 76\t35\t2000\t2\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(0));
-        assertEquals(answer, result);
+    public void queryCount() throws SQLException{
+        String sql = """
+                select count(*)
+                from retiree
+                where retirement_experience=2;
+                """;
+        List<String> ans = getAnswer(sql);
+        assertEquals(new LinkedList<>(Collections.singletonList("2")),ans);
     }
-    @Test
-    public void allQuery() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("1\tSuchareva\tNatalia\t7\tteachers higher category\t");
-        answer.add("2\tBuyvidovich\tVasiliy\t16\tdoctor\t");
-        answer.add("3\tBruzhas\tIrina\t2\tnurse\t");
-        answer.add("4\tPetrov\tIvan\t35\tnurse\t");
-        answer.add("5\tOreshko\tIhar\t2\tteachers higher category\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(1));
-        assertEquals(answer, result);
 
-    }
     @Test
-    public void countExperience2Query() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("2\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(2));
-        assertEquals(answer, result);
+    public void querySum() throws SQLException{
+        String sql = """
+                select sum (retirement)
+                from retiree
+                where retirement_experience > 10;
+                """;
+        List<String> ans = getAnswer(sql);
+        assertEquals(new LinkedList<>(Collections.singletonList("3500.0")),ans);
+    }
 
-    }
     @Test
-    public void sumExperience10Query() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("3500\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(3));
-        assertEquals(answer, result);
+    public void queryMax() throws SQLException{
+        String sql = """
+                select max(retirement)
+                from retiree;
+                """;
+        List<String> ans = getAnswer(sql);
+        assertEquals(new LinkedList<>(Collections.singletonList("2000.0")),ans);
     }
-    @Test
-    public void maxRetirementQuery() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("2000\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(4));
-        assertEquals(answer, result);
 
-    }
     @Test
-    public void minRetirementQuery() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("500\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(5));
-        assertEquals(answer, result);
-
+    public void queryMin() throws SQLException{
+        String sql = """
+                select min(retirement)
+                from retiree;
+                """;
+        List<String> ans = getAnswer(sql);
+        assertEquals(new LinkedList<>(Collections.singletonList("500.0")),ans);
     }
+
     @Test
-    public void teacherQuery() throws IOException, SQLException {
-        ArrayList<String> answer = new ArrayList<>();
-        answer.add("1\tSuchareva\tNatalia\tVictorovna\tF\tBelarus\t1975\t294567890\t222160, Zhodino, 8 marta, 16\t7\t1000\t1\tteachers higher category\t");
-        answer.add("5\tOreshko\tIhar\tHeorgievich\tM\tBelarus\t1967\t294567200\t222160, Zhodino, Stalina 15, 2\t2\t500\t1\tteachers higher category\t");
-        ArrayList<String> result = SimpleQueries.getQuery(queries.get(6));
-        assertEquals(answer, result);
+    public void queryTeachers() throws SQLException {
+        String sql = """
+                select retiree.*, job.job_position
+                from retiree inner join job
+                                        on retiree.job_id = job.id
+                where job_position = 'teachers higher category';
+                """;
 
+        List<String> correctAns = new LinkedList<>();
+        correctAns.add("1\tSuchareva\tNatalia\tVictorovna\tF\tBelarus\t1975\t294567890\t" +
+                "222160, Zhodino, 8 marta, 16\t7\t1000.0\t1\tteachers higher category");
+        correctAns.add("5\tOreshko\tIhar\tHeorgievich\tM\tBelarus\t1967\t294567200\t222160," +
+                " Zhodino, Stalina 15, 2\t2\t500.0\t1\tteachers higher category");
+        assertEquals(correctAns, getAnswer(sql));
     }
+
+    public static List<String> getAnswer(String sql) throws SQLException {
+        List<Object[]> rows = SimpleQueries.executeQuery(sql);
+        List<String> ans = new LinkedList<>();
+
+        for (Object[] row : rows) {
+            String rowStr = "";
+            for (int i = 0; i < row.length; i++) {
+                rowStr += row[i];
+                if (i != row.length - 1)
+                    rowStr += "\t";
+            }
+            ans.add(rowStr);
+        }
+
+        return ans;
+    }
+
+
 
 }

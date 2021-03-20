@@ -142,44 +142,7 @@ public class RetireeEntity {
         this.jobId = jobId;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
 
-        RetireeEntity that = (RetireeEntity) o;
-
-        if (!Objects.equals(id, that.id)) return false;
-        if (!Objects.equals(surname, that.surname)) return false;
-        if (!Objects.equals(name, that.name)) return false;
-        if (!Objects.equals(patronymic, that.patronymic)) return false;
-        if (!Objects.equals(gender, that.gender)) return false;
-        if (!Objects.equals(nationality, that.nationality)) return false;
-        if (!Objects.equals(birthYear, that.birthYear)) return false;
-        if (!Objects.equals(phone, that.phone)) return false;
-        if (!Objects.equals(address, that.address)) return false;
-        if (!Objects.equals(retirementExperience, that.retirementExperience))
-            return false;
-        if (!Objects.equals(retirement, that.retirement)) return false;
-        return Objects.equals(jobId, that.jobId);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (surname != null ? surname.hashCode() : 0);
-        result = 31 * result + (name != null ? name.hashCode() : 0);
-        result = 31 * result + (patronymic != null ? patronymic.hashCode() : 0);
-        result = 31 * result + (gender != null ? gender.hashCode() : 0);
-        result = 31 * result + (nationality != null ? nationality.hashCode() : 0);
-        result = 31 * result + (birthYear != null ? birthYear.hashCode() : 0);
-        result = 31 * result + (phone != null ? phone.hashCode() : 0);
-        result = 31 * result + (address != null ? address.hashCode() : 0);
-        result = 31 * result + (retirementExperience != null ? retirementExperience.hashCode() : 0);
-        result = 31 * result + (retirement != null ? retirement.hashCode() : 0);
-        result = 31 * result + (jobId != null ? jobId.hashCode() : 0);
-        return result;
-    }
 
     public String toString() {
         return id + "\t" + surname + '\t' + name + '\t' + patronymic + '\t' + gender + '\t' + nationality +

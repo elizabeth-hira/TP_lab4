@@ -3,7 +3,6 @@ package tables;
 import javax.persistence.*;
 import java.util.Objects;
 
-
 @Entity
 @Table(name = "job", schema = "public", catalog = "postgres")
 public class JobEntity {
@@ -53,14 +52,6 @@ public class JobEntity {
         if (!Objects.equals(id, jobEntity.id)) return false;
         if (!Objects.equals(jobPosition, jobEntity.jobPosition)) return false;
         return Objects.equals(jobPeriod, jobEntity.jobPeriod);
-    }
-
-    @Override
-    public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
-        result = 31 * result + (jobPosition != null ? jobPosition.hashCode() : 0);
-        result = 31 * result + (jobPeriod != null ? jobPeriod.hashCode() : 0);
-        return result;
     }
 
 
