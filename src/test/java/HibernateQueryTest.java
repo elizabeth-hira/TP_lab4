@@ -1,3 +1,4 @@
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -5,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import queryManagers.HibernateQuery;
 import tables.RetireeEntity;
+
+import java.sql.SQLException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -17,6 +20,11 @@ public class HibernateQueryTest {
     @BeforeAll
     public static void migrate() {
         hibernateQuery = new HibernateQuery();
+    }
+
+    @AfterAll
+    static void release() {
+        hibernateQuery.releaseResources();
     }
 
     @Test
